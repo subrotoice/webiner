@@ -1,0 +1,349 @@
+<!DOCTYPE HTML>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIONIKO - Webinar en Vivo (Redesign Preview)</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="https://vioniko.com/assets/live-webnar/assets/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/redesign.css" type="text/css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body class="home">
+
+  <!-- Ambient Cybernetic Glow Effects -->
+  <div class="cyber-bg-overlay"></div>
+  <div class="cyber-globe-bg"></div>
+  <div class="cyber-light-streak-1"></div>
+  <div class="cyber-light-streak-2"></div>
+  <div class="cyber-light-streak-3"></div>
+
+  <!-- Top Header Navigation -->
+  <header class="header">
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="brand-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </div>
+        <span class="brand-name">VIONIKO</span>
+        <span class="brand-divider"></span>
+        <span class="brand-tagline">CONOCIMIENTO | ESTRATEGIA | RESULTADOS</span>
+      </div>
+      <div class="live-badge-section">
+        <span class="live-indicator-dot"></span>
+        <span class="live-text">WEBINAR EN VIVO</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-wrapper">
+    <div class="container">
+      
+      <!-- Video Window Card -->
+      <div class="video-window-card">
+        <!-- macOS Window Header Bar -->
+        <div class="window-titlebar">
+          <div class="window-dots">
+            <span class="window-dot dot-red"></span>
+            <span class="window-dot dot-yellow"></span>
+            <span class="window-dot dot-green"></span>
+          </div>
+          <div class="window-title-text">PowerPoint Slide Show - [Presentacion24x7Breve]</div>
+          <div class="window-header-spacer"></div>
+        </div>
+
+        <!-- Video Player Stream Container -->
+        <div class="video-stream-box">
+          <div id="video_player">
+            <div align="center" id="player_holder">
+              <video id="video" width="100%" preload="auto" poster="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.jpg" playsinline webkit-playsinline controls>
+                <source src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.mp4" type="video/mp4">
+                Tu navegador no soporta el formato de video.
+              </video>
+              <div id="divreset"></div>
+              <div id="divdestroy"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Title Bar Below Video -->
+        <div class="webinar-title-bar">
+          <div class="title-line"></div>
+          <span class="webinar-title-text">Sistema 24x7 : Ingresos Inteligentes</span>
+          <div class="title-line"></div>
+        </div>
+
+        <!-- Delayed Purchase Button Container -->
+        <div align="center" class="webinar_purchase">
+          <!-- Sample purchase link button (simulating timed display) -->
+          <!-- <a href="https://www.immunotec.com/es-US/momentum/enrollment/packs" target="_blank" class="link_report btn btn-danger">COMIENZA AQUI AHORA MISMO</a> -->
+        </div>
+      </div>
+
+      <!-- Control Center Panel / Responsive Modules (Desktop 3-Columns / Mobile Accordion Cards) -->
+      <div class="control-center-panel">
+        <div class="control-modules-row">
+          
+          <!-- Module 1: Audio Configuration -->
+          <div class="control-module module-audio open" id="accordion-audio">
+            <div class="accordion-header" onclick="toggleAccordion('accordion-audio')">
+              <div class="accordion-header-left">
+                <div class="module-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                </div>
+                <span class="module-title">CONFIGURACIÓN DE AUDIO</span>
+              </div>
+              <div class="accordion-chevron">
+                <i class="fa fa-chevron-down"></i>
+              </div>
+            </div>
+            <div class="accordion-body">
+              <div class="audio-slider-container">
+                <button type="button" class="audio-mute-btn" id="mute-btn-wrapper" aria-label="Mute">
+                  <i id="mute" class="fa fa-volume-up fa-lg"></i>
+                </button>
+                <input type="range" id="volume-bar" class="neon-range-slider" min="0" max="1" step="0.05" value="1">
+              </div>
+            </div>
+          </div>
+
+          <div class="module-separator"></div>
+
+          <!-- Module 2: Present Participants -->
+          <div class="control-module module-participants open" id="accordion-participants">
+            <div class="accordion-header" onclick="toggleAccordion('accordion-participants')">
+              <div class="accordion-header-left">
+                <div class="module-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <span class="module-title">PARTICIPANTES PRESENTES <span class="mobile-only-count">(25)</span></span>
+              </div>
+              <div class="accordion-chevron">
+                <i class="fa fa-chevron-down"></i>
+              </div>
+            </div>
+            <div class="accordion-body">
+              <div class="participants-box">
+                <div id="user_exists" style="display:none;">25</div>
+                <span class="user-count" style="display:none;"></span>
+                <ul class="user-list">
+                  <span class="User_list">
+                    <li>Karen</li>
+                    <li>Roberto</li>
+                    <li>Memo</li>
+                    <li>Luis</li>
+                    <li>Karina</li>
+                    <li>Mari</li>
+                    <li>Fernando</li>
+                    <li>Raul</li>
+                    <li>Victor</li>
+                    <li>Juan Carlos</li>
+                    <li>Maria</li>
+                    <li>Marifer</li>
+                    <li>Manuel</li>
+                    <li>Juan Manuel</li>
+                    <li>Sergio</li>
+                    <li>Frank</li>
+                    <li>Hector</li>
+                    <li>Ricardo</li>
+                    <li>Carmelita</li>
+                    <li>Aurelio</li>
+                    <li>Melisa</li>
+                    <li>Braulio</li>
+                    <li>Francisco</li>
+                    <li>Lupita</li>
+                    <li>Carmen</li>
+                  </span>
+                  <span class="Online_User_list"></span>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="module-separator"></div>
+
+          <!-- Module 3: Send Your Question (Q&A Form) -->
+          <div class="control-module module-qa open" id="accordion-qa">
+            <div class="accordion-header" onclick="toggleAccordion('accordion-qa')">
+              <div class="accordion-header-left">
+                <div class="module-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
+                <span class="module-title">ENVÍA TU PREGUNTA</span>
+              </div>
+              <div class="accordion-chevron">
+                <i class="fa fa-chevron-down"></i>
+              </div>
+            </div>
+            <div class="accordion-body">
+              <div class="module-subtitle">
+                Introduce tu nombre y correo electrónico para que podamos enviarte nuestra respuesta
+              </div>
+              <div class="enquiry-form-wrapper">
+                <form id="enquiryForm">
+                  <input type="hidden" id="webinar_token" name="token" value="ddebc2237b07d897c1e1a291330f5a59">
+                  <input type="hidden" id="webinar_admin_email" name="webinar_admin_email" value="oportunidad@vioniko.com">
+                  <input type="hidden" name="webinar_name" id="webid" value="Sistema 24x7 : Ingresos Inteligentes">
+
+                  <div class="form-inputs-row">
+                    <div class="form-input-group">
+                      <input class="modern-form-input" type="text" name="users_name" id="vector-smart-object-copy-13" placeholder="TU NOMBRE (Requerido)" required>
+                    </div>
+                    <div class="form-input-group">
+                      <input class="modern-form-input" type="email" name="users_email" id="vector-smart-object-copy-17-1" placeholder="TU E-MAIL (Requerido)" required>
+                    </div>
+                  </div>
+
+                  <textarea class="modern-form-textarea" id="vector-smart-object-10" name="question" placeholder="Mensaje" rows="2"></textarea>
+
+                  <span class="succes-text" style="display:none;">Mensaje enviado con éxito</span>
+
+                  <button type="button" onClick="submitEnquiry();" class="modern-submit-btn">
+                    <span>ENVIAR MENSAJE</span>
+                    <img id="loader_enquiry" src="https://vioniko.com/webinar/images/loader2.gif" style="display:none; width: 16px; height: 16px; margin-left: 6px;" />
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Desktop Floating Chat Edge Tab -->
+  <div class="chat-edge-tab" onclick="toggleChatDrawer()">
+    <div class="chat-edge-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+    </div>
+    <span class="chat-edge-text">Chat</span>
+    <span class="chat-edge-arrow">&lt;</span>
+  </div>
+
+  <!-- Mobile Floating Circular Chat Button (FAB) -->
+  <div class="chat-mobile-fab" onclick="toggleChatDrawer()">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+      <circle cx="8.5" cy="10" r="1.5"/>
+      <circle cx="12" cy="10" r="1.5"/>
+      <circle cx="15.5" cy="10" r="1.5"/>
+    </svg>
+    <span>Chat</span>
+  </div>
+
+  <!-- Chat Drawer Backdrop -->
+  <div class="chat-drawer-backdrop" onclick="toggleChatDrawer()"></div>
+
+  <!-- Off-Canvas Sliding Chat Drawer -->
+  <div class="chat-drawer" id="chatDrawer">
+    <div class="chat-drawer-header">
+      <div class="chat-drawer-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>ONLINE CHAT</span>
+      </div>
+      <button class="chat-drawer-close" onclick="toggleChatDrawer()" aria-label="Close Chat">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+    <div class="chat-drawer-body">
+      <div id="chat-section">
+        <div class="red-text" id="chat-banned-msg">ONLINE CHAT (APAGADO / OFF)</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Volume Control Simulation
+    var video = document.getElementById("video");
+    var muteButton = document.getElementById("mute");
+    var volumeBar = document.getElementById("volume-bar");
+
+    if (muteButton && video) {
+      muteButton.addEventListener("click", function() {
+        if (video.muted === false) {
+          video.muted = true;
+          muteButton.className = "fa fa-volume-off fa-lg";
+        } else {
+          video.muted = false;
+          muteButton.className = "fa fa-volume-up fa-lg";
+        }
+      });
+    }
+
+    if (volumeBar && video) {
+      volumeBar.addEventListener("input", function() {
+        video.volume = this.value;
+      });
+      volumeBar.addEventListener("change", function() {
+        video.volume = this.value;
+      });
+    }
+
+    // Enquiry Simulation
+    function submitEnquiry() {
+      var name = $('#vector-smart-object-copy-13').val();
+      var email = $('#vector-smart-object-copy-17-1').val();
+      var msg = $('#vector-smart-object-10').val();
+
+      if (!name || !email) {
+        alert("Por favor ingrese su nombre y correo.");
+        return;
+      }
+
+      $('#loader_enquiry').show();
+      setTimeout(function() {
+        $('#loader_enquiry').hide();
+        $('.succes-text').show();
+        $('#vector-smart-object-copy-13').val('');
+        $('#vector-smart-object-copy-17-1').val('');
+        $('#vector-smart-object-10').val('');
+        setTimeout(function() {
+          $('.succes-text').fadeOut();
+        }, 4000);
+      }, 700);
+    }
+
+    // UI Redesign Helper Functions
+    function toggleChatDrawer() {
+      var drawer = document.getElementById('chatDrawer');
+      var backdrop = document.querySelector('.chat-drawer-backdrop');
+      if (drawer) drawer.classList.toggle('open');
+      if (backdrop) backdrop.classList.toggle('active');
+    }
+
+    function toggleAccordion(id) {
+      if (window.innerWidth <= 991) {
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle('open');
+      }
+    }
+  </script>
+
+</body>
+
+</html>
