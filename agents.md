@@ -107,7 +107,21 @@ The following IDs, classes, and function names **must never be altered** because
 
 ---
 
-## 6. How to Test & Preview
+## 6. PHP 8.4 Compatibility & Language Fallbacks
+The production server runs **PHP 8.4**. In PHP 8.0+, referencing an undefined constant throws a fatal `Error` exception that crashes the page with HTTP 500.
+Because the server's language system matches language files by filename (`live_webinar.php`), files with a different name (such as `live_webinar_redesign.php`) require explicit language loading and fallback constants.
+[`live_webinar_redesign.php`](file:///E:/Subroto/webiner/live_webinar_redesign.php) defines fallbacks for all constants:
+- `WEBINAR_PURCHASE_BUTTON_TEXT`
+- `AUDIO_CONFIGURATION`
+- `PRESENT_PARTICIPANTS`
+- `LIVE_WEBINAR_VALIDATION_MESSAGE`
+- `YOUR_NAME`, `YOUR_EMAIL`, `REQUIRED`, `MESSAGE`, `SEND_MESSAGE`, `MESSAGE_RECEIVED`
+- `SEND`, `CHAT_TITLE`, `WEBINAR_LIVE_TITLE`, `SEND_YOUR_QUESTION`
+And safely guards attendee count checks (`is_array($dummy_user_qu) || $dummy_user_qu instanceof Countable`).
+
+---
+
+## 7. How to Test & Preview
 
 1. **Standalone Browser Testing (No PHP required)**:
    - Double-click or open [`preview.html`](file:///E:/Subroto/webiner/preview.html) in Chrome or Edge.
