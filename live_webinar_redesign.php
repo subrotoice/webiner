@@ -5,9 +5,41 @@ if (!isset($_SESSION)) {
   session_start();
 }
 
-
-
 require_once(dirname(__DIR__) . DIRECTORY_SEPARATOR . "helpers" . DIRECTORY_SEPARATOR . "helper.php");
+
+// Load language definitions for live_webinar if available
+$user_lang = isset($_SESSION['lang']) ? $_SESSION['lang'] : (isset($_COOKIE['lang']) ? $_COOKIE['lang'] : 'es');
+$lang_paths = array(
+    dirname(__DIR__) . "/languages/" . $user_lang . "/live_webinar.php",
+    dirname(__DIR__) . "/languages/es/live_webinar.php",
+    dirname(__DIR__) . "/languages/en/live_webinar.php",
+    __DIR__ . "/languages/" . $user_lang . "/live_webinar.php",
+    __DIR__ . "/languages/es/live_webinar.php",
+    dirname(__DIR__) . "/webinar-reg/languages/" . $user_lang . "/live_webinar.php",
+    dirname(__DIR__) . "/webinar-reg/languages/es/live_webinar.php"
+);
+foreach ($lang_paths as $lp) {
+    if (file_exists($lp)) {
+        @include_once($lp);
+        break;
+    }
+}
+
+// Fallback constant definitions for PHP 8.0+ compatibility
+if (!defined('WEBINAR_PURCHASE_BUTTON_TEXT')) define('WEBINAR_PURCHASE_BUTTON_TEXT', 'COMIENZA AQUI AHORA MISMO');
+if (!defined('AUDIO_CONFIGURATION')) define('AUDIO_CONFIGURATION', 'CONFIGURACIÓN DE AUDIO');
+if (!defined('PRESENT_PARTICIPANTS')) define('PRESENT_PARTICIPANTS', 'PARTICIPANTES PRESENTES');
+if (!defined('LIVE_WEBINAR_VALIDATION_MESSAGE')) define('LIVE_WEBINAR_VALIDATION_MESSAGE', 'Introduce tu nombre y correo electrónico para que podamos enviarte nuestra respuesta');
+if (!defined('YOUR_NAME')) define('YOUR_NAME', 'TU NOMBRE');
+if (!defined('REQUIRED')) define('REQUIRED', 'Requerido');
+if (!defined('YOUR_EMAIL')) define('YOUR_EMAIL', 'TU E-MAIL');
+if (!defined('MESSAGE')) define('MESSAGE', 'Mensaje');
+if (!defined('SEND_MESSAGE')) define('SEND_MESSAGE', 'ENVIAR MENSAJE');
+if (!defined('MESSAGE_RECEIVED')) define('MESSAGE_RECEIVED', 'Mensaje enviado con éxito');
+if (!defined('SEND')) define('SEND', 'ENVIAR');
+if (!defined('CHAT_TITLE')) define('CHAT_TITLE', 'Chat Grupal');
+if (!defined('WEBINAR_LIVE_TITLE')) define('WEBINAR_LIVE_TITLE', 'WEBINAR EN VIVO');
+if (!defined('SEND_YOUR_QUESTION')) define('SEND_YOUR_QUESTION', 'ENVÍA TU PREGUNTA');
 
 $webinar_id  = filter_var($_GET["webinar_id"], FILTER_SANITIZE_NUMBER_INT);
 
@@ -145,9 +177,11 @@ if (!isset($chat_online) || !$chat_online) {
 <?php
   $chat_error_msg =  "<div class='red-text' style='padding-left:210px; color:#000066;'>ONLINE CHAT (APAGADO/ OFF)</div>";
 }
-function get_chat()
-{
-  return include("chat/index.php");
+if (!function_exists('get_chat')) {
+  function get_chat()
+  {
+    return include("chat/index.php");
+  }
 }
 
 $dummy_user_qu = $pdo_db->query("SELECT name,admin_id from dummy_users WHERE admin_id = :admin_id", array("admin_id" => $webinar_admin_id));
@@ -246,7 +280,7 @@ $webinar_fb_pixel_code = getUserPixelCode($webinar_admin_id, "fbpixel_wasistenci
         //       + ", showButtonDateTime: " + showDateTime);
 
         if (showDateTime < now) {
-          jQuery('.webinar_purchase').html('<a href="' + '<?= $fetch_user['pagina_corporativa'] ?>' + '" target="_blank" class="link_report btn btn-danger" onclick="link_report(event);"><?= WEBINAR_PURCHASE_BUTTON_TEXT ?></a>');
+          jQuery('.webinar_purchase').html('<a href="' + '<?= $fetch_user['pagina_corporativa'] ?>' + '" target="_blank" class="link_report btn btn-danger" onclick="link_report(event);"><?= defined('WEBINAR_PURCHASE_BUTTON_TEXT') ? WEBINAR_PURCHASE_BUTTON_TEXT : 'COMIENZA AQUI AHORA MISMO' ?></a>');
           clearInterval(globalIntervalPurchaseBtn);
         }
 
@@ -280,7 +314,7 @@ $webinar_fb_pixel_code = getUserPixelCode($webinar_admin_id, "fbpixel_wasistenci
           // if( obj && obj.purchase_button == 1) {
           //     jQuery('.webinar_purchase').html('');
           // } else if(obj.purchase_button != null && obj.purchase_button) {
-          //   jQuery('.webinar_purchase').html('<a href="' + obj.purchase_button +'" title="'+ obj.purchase_button +'" target="_blank" class="link_report btn btn-danger" onclick="link_report(event);"><?php echo WEBINAR_PURCHASE_BUTTON_TEXT; ?></a>');
+          //   jQuery('.webinar_purchase').html('<a href="' + obj.purchase_button +'" title="'+ obj.purchase_button +'" target="_blank" class="link_report btn btn-danger" onclick="link_report(event);"><?php echo defined('WEBINAR_PURCHASE_BUTTON_TEXT') ? WEBINAR_PURCHASE_BUTTON_TEXT : 'COMIENZA AQUI AHORA MISMO'; ?></a>');
           // }
 
 
@@ -573,9 +607,26 @@ $webinar_fb_pixel_code = getUserPixelCode($webinar_admin_id, "fbpixel_wasistenci
   // Webinar Chat
   // $admin_id = $_GET['admin_id'];
   $admin_id = $webinar_admin_id;
-  $chat = mysql_fetch_array(mysql_query("SELECT * FROM usuario2 WHERE usuario_id='$admin_id'", $conexion));
-  $chat_code_webinar = $chat['chat_code_webinar'];
-  echo base64_decode($chat_code_webinar);
+  $chat_code_webinar = '';
+  if (function_exists('mysql_query') && isset($conexion)) {
+    $chat_res = @mysql_query("SELECT * FROM usuario2 WHERE usuario_id='$admin_id'", $conexion);
+    if ($chat_res) {
+      $chat = @mysql_fetch_array($chat_res);
+      if (is_array($chat) && !empty($chat['chat_code_webinar'])) {
+        $chat_code_webinar = $chat['chat_code_webinar'];
+      }
+    }
+  } elseif (isset($pdo_db)) {
+    try {
+      $chat = $pdo_db->row("SELECT * FROM usuario2 WHERE usuario_id = :admin_id", array("admin_id" => $admin_id));
+      if (is_array($chat) && !empty($chat['chat_code_webinar'])) {
+        $chat_code_webinar = $chat['chat_code_webinar'];
+      }
+    } catch (Exception $e) {}
+  }
+  if (!empty($chat_code_webinar)) {
+    echo base64_decode($chat_code_webinar);
+  }
   ?>
 </head>
 
@@ -720,7 +771,10 @@ $webinar_fb_pixel_code = getUserPixelCode($webinar_admin_id, "fbpixel_wasistenci
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                   </svg>
                 </div>
-                <span class="module-title"><?php echo defined('PRESENT_PARTICIPANTS') ? PRESENT_PARTICIPANTS : 'PARTICIPANTES PRESENTES'; ?> <span class="mobile-only-count"><?php echo !empty($dummy_user_qu) ? '(' . count($dummy_user_qu) . ')' : ''; ?></span></span>
+                <?php
+                $dummy_count = (isset($dummy_user_qu) && (is_array($dummy_user_qu) || $dummy_user_qu instanceof Countable)) ? count($dummy_user_qu) : 0;
+                ?>
+                <span class="module-title"><?php echo defined('PRESENT_PARTICIPANTS') ? PRESENT_PARTICIPANTS : 'PARTICIPANTES PRESENTES'; ?> <span class="mobile-only-count"><?php echo $dummy_count > 0 ? '(' . $dummy_count . ')' : ''; ?></span></span>
               </div>
               <div class="accordion-chevron">
                 <i class="fa fa-chevron-down"></i>
@@ -728,7 +782,7 @@ $webinar_fb_pixel_code = getUserPixelCode($webinar_admin_id, "fbpixel_wasistenci
             </div>
             <div class="accordion-body">
               <div class="participants-box">
-                <div id="user_exists" style="display:none;"><?php echo count($dummy_user_qu); ?></div>
+                <div id="user_exists" style="display:none;"><?php echo $dummy_count; ?></div>
                 <span class="user-count" style="display:none;"></span>
                 <ul class="user-list">
                   <span class="User_list">
@@ -1199,8 +1253,8 @@ $webinar_fb_pixel_code = getUserPixelCode($webinar_admin_id, "fbpixel_wasistenci
       alert("Este sitio web utiliza cookies, debe habilitarlo para utilizar las funciones \n" +
         "This website uses cookies, you must enable it to use the features.");
     }
-    jQuery('#submitButton').val('<?php echo SEND; ?>');
-    jQuery('#headline').html('<?php echo CHAT_TITLE; ?>');
+    jQuery('#submitButton').val('<?php echo defined('SEND') ? SEND : 'ENVIAR'; ?>');
+    jQuery('#headline').html('<?php echo defined('CHAT_TITLE') ? CHAT_TITLE : 'Chat Grupal'; ?>');
 
 
     var webinar_user_name = "<?php echo $webinar_user_name ?>";
