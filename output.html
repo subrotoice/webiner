@@ -1,0 +1,873 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=WINDOWS-1252">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIONIKO</title>
+  <meta name="description" content="" />
+  <meta name="keywords" content="" />
+  <!---->
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="../assets/live-webnar/assets/css/style.css" />
+  <link rel="stylesheet" type="text/css" href="../assets/live-webnar/assets/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/style.css" type="text/css" />
+  <link href="css/poll.css" rel="stylesheet" type="text/css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="../js/jquery.min.js"></script>
+  <script src="../js/jquery-form-plugin.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+      <script>
+      jQuery(document).ready(function() {
+        loading("loader");
+      });
+      jQuery(window).load(function() {
+        var myVideo = document.getElementsByTagName('video')[0];
+        myVideo.addEventListener('canplaythrough', showAccessBtn(), false);
+      });
+    </script>
+    <script>
+    var frontend_online_list = 'frontend_online_list';
+    var ChatEnableWithoutRefresh = {};
+    ChatEnableWithoutRefresh.value = 0;
+    var webinar_id = '597';
+  </script>
+  <script>
+    var chat_html = '';
+
+    function startPollingForChat() {
+      var checkStatus = setInterval(function() {
+        checkChatStatus(checkStatus)
+      }, 8000);
+    }
+
+    var globalPageOpenTime = new Date();
+
+
+    // Show purchase button if configured time has passed since the webinar opening.
+    var globalIntervalPurchaseBtn;
+
+    function delayedShowPurchaseButton() {
+
+      var configuredDelayMinutes = 50;
+      // var configuredDelayDate = new Date(0,0,0,0, configuredDelayMinutes, 0,0);
+
+      globalIntervalPurchaseBtn = setInterval(function() {
+
+
+        if (video.currentTime < 1) {
+          return null;
+        }
+
+        // console.log("Test...");
+
+        var currentVideoTime = window.sessionStorage.getItem("playBackVideoTime") ? window.sessionStorage.getItem("playBackVideoTime") : 0;
+        currentVideoTime = Math.round(currentVideoTime);
+
+        // console.log("currentVideoTime: " + currentVideoTime);
+
+
+        // Generate time when to show the purchase button
+        // console.log("decreasing showTIme for " + ((currentVideoTime * 1000)) + " seconds");
+        var showDateTime = new Date(globalPageOpenTime.getTime() - (currentVideoTime * 1000) + configuredDelayMinutes * 60 * 1000);
+
+        var now = new Date();
+        // console.log("conf: " + configuredDelayMinutes );
+        // console.log("conf: " + configuredDelayMinutes 
+        //       + ", now: " + now 
+        //       + ", opened: " + globalPageOpenTime 
+        //       + ", showButtonDateTime: " + showDateTime);
+
+        if (showDateTime < now) {
+          jQuery('.webinar_purchase').html('<a href="' + 'https://www.immunotec.com/es-US/momentum/enrollment/packs' + '" target="_blank" class="link_report btn btn-danger" onclick="link_report(event);">COMIENZA AQUI AHORA MISMO</a>');
+          clearInterval(globalIntervalPurchaseBtn);
+        }
+
+      }, 10 * 1000)
+    }
+
+
+
+    // Check If Chat Enabled By Admin
+    function checkChatStatus(checkStatus) {
+      var chatHtml = jQuery("#chat-section #content").length;
+
+      jQuery.ajax({
+          type: "GET",
+          url: "chat/chat_vionika_essentials.php",
+          data: {
+            token: "ddebc2237b07d897c1e1a291330f5a59",
+            chatHtml: chatHtml,
+            ajaxRequest: 1,
+            webinarId: 597,
+            webinarAdminId: 3642          }
+        })
+        .done(function(chatOnline) {
+          if (!chatOnline) {
+            return false;
+          }
+
+          var obj = JSON.parse(chatOnline);
+
+          // if( obj && obj.purchase_button == 1) {
+          //     jQuery('.webinar_purchase').html('');
+          // } else if(obj.purchase_button != null && obj.purchase_button) {
+          //   jQuery('.webinar_purchase').html('<a href="' + obj.purchase_button +'" title="'+ obj.purchase_button +'" target="_blank" class="link_report btn btn-danger" onclick="link_report(event);">COMIENZA AQUI AHORA MISMO</a>');
+          // }
+
+
+
+          if (obj && obj.hangout_status == 1) {
+            jQuery('#player_holder').html(' <input type="hidden" id="video_status" value="message"><p style="line-height: 40px;width: 100%; font-size: 32px;padding-top: 100px; padding-bottom: 100px;">AGRADECEMOS SU ASISTENCIA / THANK YOU FOR COMING</p>');
+          } else if (obj.hangout_status == 0) {
+            if (jQuery('#video_status').val() == 'message') {
+              var hangout_video_html = ' <input type="hidden" id="video_status" value="video"><iframe id="hangout_video" style="position: relative; height: 50vh; width: 100%;" scrolling="no" frameborder="0" src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.mp4" frameborder="0" allowfullscreen></iframe>';
+              jQuery('#player_holder').html(hangout_video_html);
+            }
+          }
+
+          if (chatOnline == "authentication_failed" || (typeof ajaxChat != "undefined" && ajaxChat.socketError)) {
+            // IF Socket Connection Error then disable chat but continue to poll for other varaibles
+            if (chatOnline == "authentication_failed") {
+              clearInterval(checkStatus);
+            }
+
+            jQuery("#chat-section").empty();
+            jQuery("#chat-section").append("<div class='red-text' id='chat-banned-msg'>ONLINE CHAT (APAGADO/ OFF)</div>");
+            return false;
+          }
+
+          if (obj.chat_status == "do_nothing") {
+            return;
+          }
+
+          if (obj.chat_status == 'online') {
+            ChatEnableWithoutRefresh.value = 1;
+            if (!chatHtml) {
+              jQuery.ajax({
+                  type: "GET",
+                  url: "chat/index.php",
+                  data: {
+                    login: 1,
+                    user_login_to_chat: 1,
+                    webinar_id: 597                  },
+                })
+                .done(function(data) {
+                  chat_html = data;
+                  jQuery("#chat-section").html(chat_html);
+                });
+              //jQuery("#chat-banned-msg").append("ONLINE CHAT (APAGADO/ OFF) ");
+            }
+          } else {
+            if (chatHtml) {
+              jQuery("#chat-section").empty();
+              jQuery("#chat-section").append("<div class='red-text' id='chat-banned-msg'>ONLINE CHAT (APAGADO/ OFF)</div>");
+            }
+          }
+        });
+    }
+  </script>
+  <style>
+    .rowOdd a {
+      color: #000000;
+    }
+
+    .rowOdd ul {
+      display: none;
+    }
+
+    .rowEven a {
+      color: #000000;
+    }
+
+    .rowEven ul {
+      display: none;
+    }
+
+    .right-box div#chat-section {
+      border-radius: 1rem;
+      padding-top: 1rem;
+
+    }
+
+
+    .video-box,
+    .left-box,
+    .main-wrapper h3 {
+      border-radius: 1rem;
+    }
+
+    .world-bg {
+        background: url('https://vioniko.com/webinar_images/bg_image_597_1762912462.jpeg') center no-repeat;
+        background-size: cover;
+        max-width: 100%;
+        height: 100vh;
+    }.container {
+      background: url('https://vioniko.com/webinar_images/bg_image_597_1762912462.jpeg') center no-repeat;
+      background-size: cover;
+  }body {
+      background: url('https://vioniko.com/webinar_images/bg_image_597_1762912462.jpeg') repeat-y center top;
+      background-size: cover;
+  }.main-wrapper h3 {
+        background: #000000;
+    }.combine {
+        background: #000000;
+    }.f-times {
+        margin-top: 20px;
+        padding-top: 20px;
+    }.req-form, .req-form .form-title {
+        background: #000000 !important;
+    }.left-box {
+          background: #000000 !important;
+      }.two-boxes .right-box {
+          background: #000000 !important;
+          margin-top: 0;
+          height: 510px;
+      }.f-form2 {
+          padding-bottom: 25px;
+      }.video-box {
+          background: #000000 !important;
+      }.right-box div#chat-section {
+          background: #000000 !important;
+      }    /* Desktop (side by side) */
+    @media (max-width: 768px) {
+      .two-boxes {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .two-boxes .col-sm-5,
+      .two-boxes .col-sm-7 {
+        flex: 1 1 100%;
+        /* flex: 1; */
+      }
+
+      /* Ensure first column shows first on mobile */
+      .two-boxes .col-sm-5 {
+        order: 2;
+        margin-top: 20px;
+      }
+
+      .two-boxes .col-sm-7 {
+        order: 1;
+      }
+
+      .header {
+        display: none;
+      }
+
+      .header-border {
+        height: 5px;
+        margin-top: 5px;
+        margin-bottom: 23px;
+      }
+
+      .footer {
+        position: relative;
+      }
+    }
+
+
+    @media (max-width: 600px) {
+      #overlay {
+        display: flex;
+        opacity: 1;
+        background: #000000c2;
+        filter: alpha(opacity=80);
+        width: 100%;
+        height: 100%;
+        z-index: 999;
+        top: 0;
+        left: 0;
+        position: fixed;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      #access-btn {
+        height: 60px;
+        position: unset;
+        margin: 0px;
+        font-weight: bolder;
+        font-size: 12px;
+        width: 100%;
+
+      }
+    }
+
+    @media (max-width: 768px) {
+      .right-box div#chat-section {
+        position: unset;
+        width: auto;
+        background: #013058;
+
+      }
+
+      .right-box div#chat-section {
+        position: static;
+        width: 100%;
+        background: #013058;
+        height: auto;
+        right: 0;
+      }
+
+      .pawan-row {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+      }
+
+      .pawan-order-2 {
+        order: 2;
+
+
+      }
+
+      .pawan-order-1 {
+        order: 1;
+
+
+      }
+
+      .pawan-order-3 {
+        order: 3;
+      }
+
+
+
+      .pawan-row {
+        margin-right: -0px;
+        margin-left: -0px;
+      }
+    }
+  </style>
+  <script type="application/javascript">window.vionikoaiChat = {
+  "userId": "fcJAePkUVwV7fBR3uiGh5iyt2Tf1",
+  "embedToken": "eyJvd25lcklkIjoiZmNKQWVQa1VWd1Y3ZkJSM3VpR2g1aXl0MlRmMSIsImNvbnZlcnNhdGlvbklkIjoiZmIwNTg2OWMtN2YwYy00ODE2LWE5ZTktM2Y5NzNhMDg3YjU3IiwiYWxsb3dlZEZpbGVJZHMiOlsiYjZiY2NlMTktMjM0ZC00NzFiLWI5ZDItZTYyZTFiODJjYWNjIl0sInYiOjEsImlzc3VlZEF0IjoxNzg5OTM1MTIyMTc5fQ.RL17-Dwm6wRUHrdmAAS6y8aU2kbvTU6wwS1e5IRNk2s",
+  "conversationId": "fb05869c-7f0c-4816-a9e9-3f973a087b57",
+  "fileName": "SISTEMA 24x7 Sistema automatizado de prospecciÃ³n digital.pdf",
+  "systemPrompt": "Eres \"Asistente Virtual\", el asistente oficial del Sistema 24x7. Atiendes 24/7 a personas que exploran la pÃ¡gina, el embudo o el webinar. Tu funciÃ³n: resolver dudas con precisiÃ³n, elevar la percepciÃ³n del sistema y â€”sin presionarâ€” guiar al prospecto al siguiente paso.\n\nNo eres vendedor agresivo. Eres la persona mÃ¡s preparada y mÃ¡s agradable de la sala.\n\nTONO\nElegante, cÃ¡lido, humano. Frases cortas, cero jerga corporativa.\nSeguro pero sobrio. Di \"estÃ¡ respaldado por 78 patentes\", no \"Â¡el mejor del mundo!\".\nNunca desesperado. No persigues al prospecto.\nEspaÃ±ol siempre; si el usuario escribe claramente en inglÃ©s, respÃ³ndele en inglÃ©s.\nUn emoji mÃ¡ximo, solo si el usuario usÃ³ uno primero.\nPÃ¡rrafos cortos. ViÃ±etas solo si enumeras.\nREGLAS\nSaludo o \"hola\": saluda cÃ¡lido y ofrece ayuda en una lÃ­nea. Una sola pregunta.\nPregunta que SÃ estÃ¡ en el contexto: responde con el dato exacto. No inventes ni redondees.\nPregunta que NO estÃ¡ en el contexto: nunca cierres la puerta. Responde con lo mÃ¡s cercano que sepas y redirige. \"Ese dato exacto lo confirma tu patrocinador en minutos â€” Â¿te conecto?\"\nTema fuera de alcance (clima, deportes, polÃ­tica): responde breve y con gracia, y regresa al hilo.\nUsuario confundido: simplifica a 3 puntos y pregunta quÃ© profundizar.\nUsuario con dudas o escepticismo: valida primero (\"es una pregunta justa\"), luego responde con evidencia concreta.\nUsuario entusiasmado: no lo dejes enfriarse. Confirma el siguiente paso exacto.\nCierra siempre con una invitaciÃ³n, nunca con \"Â¿algo mÃ¡s?\". Adapta el cierre a su nivel de interÃ©s.\nPROHIBIDO\nPrometer dinero rÃ¡pido, garantizado o sin esfuerzo.\nDar cifras de ingresos como certeza (usa \"hasta\", \"proyectado\", \"segÃºn el plan\").\nDatos, patentes, estudios o certificaciones que no estÃ©n textualmente en el contexto.\nPRIMER MENSAJE\nNunca asumas dÃ³nde estÃ¡ el usuario: puede estar reciÃ©n llegando o ya terminando el webinar.\n\nÂ¡Hola! ðŸ‘‹ Soy el Asistente Virtual del Sistema 24x7. Estoy aquÃ­ para lo que necesites mientras exploras â€” sin prisa y sin compromiso.\n\nÂ¿Te ayudo con algo en particular?\n\nMÃ¡ximo 2 lÃ­neas, sin mencionar \"webinar\" ni \"video\". No insistas si no responde: el bot no persigue.\n\nSIGUIENTE PASO\nDespuÃ©s de 2â€“3 intercambios, identifica suavemente quÃ© busca: ingreso extra, producto para salud propia, o comparar opciones. Eso define tu cierre:\n\nFrÃ­o: \"Â¿Te explico cÃ³mo se ve esto en la prÃ¡ctica para alguien en tu situaciÃ³n?\"\nTibio: \"Â¿Quieres ver la diferencia entre afiliado digital y constructor de equipos?\"\nCaliente: \"Â¿Te conecto ahora con quien te compartiÃ³ el sistema para asegurar tu lugar?\"\nCONTEXTO DEL SISTEMA 24x7\n(Pega aquÃ­ las 50 FAQs del PDF, completas y textuales. No resumas: el bot necesita las cifras, patentes, precios y certificaciones exactas.)\n\nTen presente:\n\nEl pÃºblico ya estÃ¡ explorando la presentaciÃ³n; no la repitas desde cero.\nPerfil tÃ­pico: buscan ingreso adicional, sin experiencia previa en ventas o redes, con poco tiempo.\nLo que mÃ¡s pesa: respaldo real (patentes, estudios, certificaciones), claridad de la inversiÃ³n, y saber que hay un sistema que trabaja por ellos.\nEje del producto: protocolo que estimula la producciÃ³n de glutatiÃ³n.\nSiguiente paso comercial: que contacte a quien le compartiÃ³ el sistema.",
+  "supportType": "custom",
+  "supportContact": "https://sistema24x7.com/",
+  "name": "Nombre",
+  "submit": "Click p/Chatear",
+  "phone": "Whatsapp",
+  "firstMessage": "Dudas respecto Sistema 24x7",
+  "inputPlaceholder": "Aqui pones tu Duda ...",
+  "chatName": "Tu Asesor Virtual 24x7",
+  "supportLabel": "Conocer Sistema 24x7",
+  "supportOption": ""
+};(function(d, s, id) {var js, fjs = d.getElementsByTagName(s)[0];if (d.getElementById(id)) return;js = d.createElement(s);js.id = id;js.async = true;js.src = "https://mlsniperpro.github.io/vionikoaichatbox/client/chatWidget.js";fjs.parentNode.insertBefore(js, fjs);}(document, 'script', 'vionikoaiChat-jssdk'));</script></head>
+
+
+
+<body class="home">
+
+  <div class="header">
+  </div>
+
+  <div class="main-wrapper">
+    <span class="world-bg"></span>
+    <div class="container">
+      <div class="pull-right">
+              </div>
+      <div class="row pawan-row">
+        <div class="col-xs-12 col-sm-3 col-md-3 pawan-order-2">
+          <div class="left-box">
+                          <h3>CONFIGURACION DE AUDIO</h3>
+              <div class="top-controls">
+                <div class="volume-control2">
+                  <i id="mute" class="fa fa-volume-up fa-lg"></i>
+                  <input type="range" id="volume-bar" min="0" max="1" step="0.1" value="1">
+                </div>
+              </div>
+                        <h3>Participantes Presentes</h3>
+            <div class="chat-user">
+              <div id="user_exists" style="display:none;">25</div>
+
+              <span class="user-count"></span>
+              <ul class="user-list">
+                <span class="User_list">
+                  <li>Karen
+</li><li>Roberto
+</li><li>Memo
+</li><li>Luis
+</li><li>Karina
+</li><li>Mari
+</li><li>Fernando 
+</li><li>Raul
+</li><li>Victor
+</li><li>Juan Carlos
+</li><li>Maria
+</li><li>Marifer
+</li><li>Manuel
+</li><li>Juan Manuel
+</li><li>Sergio
+</li><li>Frank
+</li><li>Hector
+</li><li>Ricardo
+</li><li>Carmelita
+</li><li>Aurelio
+</li><li>Melisa
+</li><li>Braulio
+</li><li>Francisco
+</li><li>Lupita
+</li><li>Carmen</li>                </span>
+                <span class="Online_User_list"></span>
+              </ul>
+
+            </div>
+            <span class="succes-text" style="display:none;">Message has been received</span>
+            <div class="req-form">
+              <span class="form-title">
+                Introduce tu nombre y correo electrónico para que podamos enviarte nuestra respuesta              </span>
+
+              <form id="enquiryForm">
+                <input type="hidden" id="webinar_token" name="token" value="ddebc2237b07d897c1e1a291330f5a59">
+                <input type="hidden" id="webinar_admin_email" name="webinar_admin_email" value="oportunidad@vioniko.com">
+                <input type="hidden" name="webinar_name" id="webid" value="Sistema 24x7 : Ingresos Inteligentes">
+                TU NOMBRE (Requerido)<br>
+                <input class="textbox" type="text" name="users_name" id="vector-smart-object-copy-13" value="" required>
+                TU E-MAIL (Requerido)<br>
+                <input class="textbox" type="text" name="users_email" id="vector-smart-object-copy-17-1" value="" required>
+                Mensaje<br>
+                <textarea class="textbox" id="vector-smart-object-10" name="question" rows="5" style="border:1px solid #cccccc; padding:3px;"></textarea>
+                <br>
+                <input type="button" onClick="submitEnquiry();" value="ENVIAR MENSAJE" class="subt">
+                <form>
+                  <img id="loader_enquiry" src="images/loader2.gif" style="display:none; margin-left: -38px; margin-bottom: -20px;" />
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-6 pawan-order-1">
+          <div class="video-box" style="">
+            <span class="top-title">Webinar</span>
+            <div class="vid-box">
+              <div class="video">
+                <div id="video_player">
+                  <div align="center" id="player_holder" style="padding:8px;">
+                                          <video id="video" width="100%" preload="auto" poster="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.jpg" playsinline webkit-playsinline>
+                      </video>
+                                        <div id="divreset"></div>
+                    <div id="divdestroy"></div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            <span class="footer-title">Sistema 24x7 : Ingresos Inteligentes</span>
+          </div>
+          <div align="center" class="webinar_purchase"></div>
+        </div>
+        <div class="col-xs-12 col-sm-3 col-md-3 pawan-order-3">
+          <div class="right-box clearfix">
+            <div id="chat-section">
+              <div class="red-text" id="chat-banned-msg"></div>
+              <div class='red-text' style='padding-left:210px; color:#000066;'>ONLINE CHAT (APAGADO/ OFF)</div>            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+  </div>
+  <script>
+    /**
+     *
+     * Submit Enquiry Form
+     */
+    function submitEnquiry() {
+      jQuery("#loader_enquiry").show();
+      var users_name = jQuery('#vector-smart-object-copy-13').val();
+      var users_email = jQuery('#vector-smart-object-copy-17-1').val();
+      var question = jQuery('#vector-smart-object-10').val();
+      var token = jQuery('#webinar_token').val();
+      var webinar_admin_email = jQuery('#webinar_admin_email').val();
+
+      jQuery.ajax({
+        type: 'POST',
+        url: 'enquiry.php',
+        data: {
+          users_name: users_name,
+          users_email: users_email,
+          question: question,
+          token: token,
+          webinar_admin_email: webinar_admin_email
+        },
+        success: function(data) {
+
+          jQuery("#loader_enquiry").hide();
+          if (data == "mail_sent") {
+            jQuery(".succes-text").text("Mensaje enviado con ï¿½xito");
+            jQuery(".succes-text").show();
+            jQuery('#vector-smart-object-copy-13').val('');
+            jQuery('#vector-smart-object-copy-17-1').val('');
+            jQuery('#vector-smart-object-10').val('');
+            setTimeout(function() {
+              jQuery(".succes-text").hide();
+            }, 5000)
+          } else {
+            jQuery(".succes-text").attr("class", "warning-text");
+            jQuery(".warning-text").text(data);
+            jQuery(".warning-text").show();
+          }
+        }
+      });
+    }
+
+          /**
+       *
+       * Video Loading
+       */
+
+      // Event listener for the click btn
+      jQuery(document).on("click", "#access-btn", function() {
+
+        // Set Video to the offset that has already played
+        if (window.sessionStorage.getItem("playBackVideoTime")) {
+          video.currentTime = window.sessionStorage.getItem("playBackVideoTime");
+        }
+
+        // If Full video already watche then set current time to end of video
+        if (video.duration && video.currentTime >= video.duration) {
+          video.currentTime = video.duration - .01; //  Add Offset to video as video has been watched by the user
+        }
+
+        jQuery("#overlay").remove();
+        video.play();
+      });
+
+      function showAccessBtn() {
+        console.log("can play now");
+        jQuery("div#overlay").remove();
+        loading("access_btn");
+      }
+
+
+      /*
+       **
+       *  ========== Loader =============
+       */
+
+      var loading = function(load_obj) {
+        var over = '<div id="overlay">';
+        if (load_obj == "loader") {
+          over += '<img id="loading" src="images/loading.gif">';
+        } else if (load_obj == "access_btn") {
+          over += '<button id="access-btn" class="custom-btn custom-btn-success">INGRESAR AHORA/ ACCESS NOW</button>'
+        }
+
+        over += '</div>';
+
+        jQuery(over).prependTo('body');
+      };
+
+      /**
+       *
+       * Check If user on IOS then diff behavior for video loading
+       */
+
+
+      function checkIfOniOS() {
+
+        var iDevices = [
+          'iPad Simulator',
+          'iPhone Simulator',
+          'iPod Simulator',
+          'iPad',
+          'iPhone',
+          'iPod'
+        ];
+
+        var onOSX = false;
+
+        while (iDevices.length) {
+          if (navigator.platform === iDevices.pop()) {
+            onOSX = true;
+          }
+        }
+
+        return onOSX;
+      }
+
+      var VideoFormatError = "Formato de vï¿½deo no compatible, Pruebe con otro navegador \\ \n Video Format Not Supported, Try another browser";
+      var lastPlayable;
+
+      var myTypes = new Array("video/mp4", "video/ogg", "video/mov", "video/webm");
+      var mySrc = new Array("webinar2026.mp4", "webinar2026.mv4", "webinar2026.ogg", "webinar2026.mov", "webinar2026.webm");
+
+      /*
+       * Error In Playing Video
+       */
+      function errorFallback() {
+        if (video.currentSrc.match(lastPlayable)) {
+          jQuery("#overlay").remove();
+          alert(VideoFormatError);
+        }
+      }
+
+      function checkVideoPlayable() {
+
+        var noPlayableTypes = "Your browser cannot play these movie types";
+        var playAny = 0;
+
+        for (var i = 0, len = myTypes.length; i < len; i++) {
+          var canPlay = video.canPlayType(myTypes[i]);
+          if ((canPlay == "maybe") || (canPlay == "probably")) {
+            playAny = 1;
+            lastPlayable = mySrc[i];
+          }
+        }
+
+        if (playAny == 0) {
+          console.log("playback format not found");
+          errorFallback();
+        }
+      }
+
+      /**
+       *
+       * Video Controls
+       */
+
+      window.onload = function() {
+        var onOSX = checkIfOniOS();
+
+        // If On IOS Apple device than show m4v video first else show mp4 video first 
+        var video_html = '';
+
+        if (onOSX) {
+          video_html += '<source id="video-m4v" src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.m4v" type="video/mp4">\
+        <source id="video-mp4" src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.mp4" type="video/mp4">';
+        } else {
+          video_html += '<source id="video-mp4" src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.mp4" type="video/mp4">\
+        <source id="video-m4v" src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.m4v" type="video/mp4">';
+        }
+
+        video_html += '<source src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.mov" type="video/mov">\
+      <source src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.ogg" type="video/ogg">\
+      <source src="https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.webm" type="video/webm">\
+       <object type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" width="640" height="360">\
+       <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" />\
+       <param name="allowFullScreen" value="true" />\
+       <param name="wmode" value="transparent" />\
+       <param name="flashvars" value="file=\'https://vioniko.s3.us-west-2.amazonaws.com/videos/webinar2026.mp4\'" />\
+        </object>\
+        Your browser does not support the video format being used.';
+
+        if (jQuery("#video").length == 1) {
+          jQuery("#video").append(video_html)
+        }
+
+        // Video
+        var video = document.getElementById("video");
+
+        var myVideo = document.querySelector('video');
+        myVideo.addEventListener("contextmenu", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }, false);
+
+        // hide the controls if they're visible
+        if (myVideo.hasAttribute("controls")) {
+          myVideo.removeAttribute("controls")
+        }
+
+        // play/pause functionality
+        function playPause() {
+          if (myVideo.paused)
+            myVideo.play();
+          else
+            myVideo.pause();
+        }
+
+        // Check If Video can be played or not
+        checkVideoPlayable();
+
+        video.addEventListener("error", errorFallback(), true);
+
+        // Access Video Btn
+        var access_btn = jQuery("#access-btn");
+
+        // Buttons
+        var muteButton = document.getElementById("mute");
+
+        // Sliders
+        var volumeBar = document.getElementById("volume-bar");
+
+        // Event listener for the mute button
+        muteButton.addEventListener("click", function() {
+          if (video.muted == false) {
+            // Mute the video
+            video.muted = true;
+            jQuery(muteButton).attr("class", "fa fa-volume-off fa-lg");
+
+          } else {
+            // Unmute the video
+            video.muted = false;
+            jQuery(muteButton).attr("class", "fa fa-volume-up fa-lg");
+
+          }
+        });
+
+        // Event listener for the volume bar
+        volumeBar.addEventListener("change", function() {
+          // console.log("Volume Control");
+          // Update the video volume
+          video.volume = volumeBar.value;
+        });
+
+        // intercept and cancel requests for the context menu
+        video.addEventListener("contextmenu", function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }, false);
+
+        // hide the controls if they're visible
+        if (video.hasAttribute("controls")) {
+          video.removeAttribute("controls")
+        }
+      };
+
+    
+
+    /**
+     *
+     * Tab closed or Refresh Actions, Destroy Session
+     */
+
+    jQuery(document).ready(function($) {
+      startPollingForChat(); // Start Checking Chat status now
+
+      // Run interval to check if configured time has passed after opening of the page.
+      // If so, show the purchase button.
+      delayedShowPurchaseButton();
+
+      var webinar_token = 'ddebc2237b07d897c1e1a291330f5a59';
+
+      // ative user status call for tracking user
+
+      jQuery.ajax({
+        type: 'POST',
+        url: 'active_user_status.php',
+        data: {
+          webinar_token: webinar_token
+        },
+        success: function(data) {
+          return true;
+        }
+      });
+
+      // User About to leave the page, assumed, if not then active call will retain the user
+
+      jQuery(window).bind("beforeunload", function(event) {
+                  var playBackVideoTime = video.currentTime;
+          window.sessionStorage.setItem("playBackVideoTime", video.currentTime);
+                jQuery.ajax({
+          type: 'POST',
+          url: 'user_status_deactive.php',
+          async: false,
+          data: {
+            webinar_token: webinar_token
+          }
+        });
+
+      });
+
+
+    });
+
+    function link_report(event) {
+      var webinar_id = '597';
+      var webinar_admin_id = '3642';
+      var webinar_token = 'ddebc2237b07d897c1e1a291330f5a59';
+      var webinar_link = jQuery('.link_report').attr('title');
+      jQuery.ajax({
+        type: 'POST',
+        url: 'webinar_link_report.php',
+        data: {
+          webinar_id: webinar_id,
+          webinar_admin_id: webinar_admin_id,
+          webinar_token: webinar_token
+        },
+        success: function(data) {
+          return;
+        }
+      });
+    }
+  </script>
+  <script>
+    if (window.WebSocket) {
+      console.log("BROWSER SUPPORTED");
+    } else {
+      jQuery("#chat-section").empty();
+      jQuery("#chat-section").append("<div class='red-text' id='chat-banned-msg'>ONLINE CHAT (APAGADO/ OFF)</div>");
+    }
+
+    // Check If cookie sare enabled
+    if (!navigator.cookieEnabled) {
+      alert("Este sitio web utiliza cookies, debe habilitarlo para utilizar las funciones \n" +
+        "This website uses cookies, you must enable it to use the features.");
+    }
+    jQuery('#submitButton').val('ENVIAR');
+    jQuery('#headline').html('Chat Grupal');
+
+
+    var webinar_user_name = "rick";
+    jQuery(document).ready(function() {
+      jQuery("#webinar_user_name").append(webinar_user_name);
+    });
+
+
+    window.onerror = function(errorMessage, errorUrl, errorLine) {
+      jQuery.ajax({
+        type: 'POST',
+        url: 'chat/error_report.php',
+        data: {
+          msg: errorMessage,
+          url: errorUrl,
+          line: errorLine,
+          userAgent: navigator.userAgent
+        },
+        success: function() {
+          // if (console && console.log) {
+          //     console.log('JS error report successful.');
+          // }
+        },
+        error: function() {
+          // if (console && console.error) {
+          //     console.error('JS error report submission failed!');
+          // }
+        }
+      });
+
+      // Prevent firing of default error handler.
+      return true;
+    }
+
+    window.addEventListener("unload", function() {
+
+      // get token from URL
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+
+      const data = {
+        webinar_token: token
+      };
+
+      navigator.sendBeacon(
+        "https://vioniko.com/webinar-reg/ajaxload.php?action=user_left&token=" + token,
+        JSON.stringify(data)
+      );
+    });
+  </script>
+
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"91c1702ff59a4ccf86e001a7058a3c98","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+
+</html>
